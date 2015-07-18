@@ -11,7 +11,7 @@ function mydiff(sourcedir, destdir, ignore, debug) {
     command = ""
     commandfront = "diff --no-ignore-file-name-case --speed-large-files -q "
     commanddiff = ""
-    commandend = "awk -F' ' '/^Only in/{if($3 == ""\""sourcedir":\""") printf(\"%s/%s\\n\", substr($3, 0, length($3)-1), $4)}'"
+    commandend = "awk -F' ' '/^Only in/{if($3 ~ ""\"""^"sourcedir"\""") printf(\"%s/%s\\n\", substr($3, 0, length($3)-1), $4)}'"
     commandexec = ""
     if(ignore)
         commanddiff = "-X "ignore
