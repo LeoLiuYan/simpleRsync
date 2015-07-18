@@ -1,15 +1,38 @@
-##!/bin/awk -f
+#!/bin/awk -f
 
 
-function stripsplash(name) {
+function strip_start_splash(name) {
+    if(substr(name, 1, 1) == "/")
+        return substr(name, 2, length(name))
+    else
+        return name
+}
+
+function strip_end_splash(name) {
     if(substr(name, length(name), 1) == "/")
-        return substr(name, 0, length(name)-1)
+        return substr(name, 1, length(name)-1)
+    else
+        return name
+}
+
+#function strip_end_field(fs, string) {
+#   strip_command = "awk 'BEGIN{FS=\"["fs"]\";}END{t=length($0)-length($NF); print substr($0, 0, t-1)}'"
+#   "echo -n "string" | "strip_command | getline new_string
+#   return new_string
+#}
+
+function refactor_destdir(name, src, dst) {
+    match(name, src)
+    subname = substr(name, RSTART+RLENGTH, length(name))
+    subname = strip_start_splash(subname)
+    return dst"/"subname
 }
 
 function mydiff(sourcedir, destdir, ignore, debug) {
-    sourcedir = stripsplash(sourcedir)
+    sourcedir = strip_end_splash(sourcedir)
+    destdir = strip_end_splash(destdir)
     command = ""
-    commandfront = "diff --no-ignore-file-name-case --speed-large-files -q "
+    commandfront = "diff --no-ignore-file-name-case --speed-large-files -q -r "
     commanddiff = ""
     commandend = "awk -F' ' '/^Only in/{if($3 ~ ""\"""^"sourcedir"\""") printf(\"%s/%s\\n\", substr($3, 0, length($3)-1), $4)}'"
     commandexec = ""
@@ -18,12 +41,11 @@ function mydiff(sourcedir, destdir, ignore, debug) {
     else
         commanddiff = ""
     command = commandfront" "commanddiff" "sourcedir" "destdir" | "commandend
-    if(debug != "true") {
-        commandexec = "xargs -i cp -pr {} "destdir
-        command = command" | "commandexec
-    }
-    #print command
-    system(command)
+    command = command" | awk 'BEGIN{strip_end_splash="strip_end_splash"}'"
+    print command
+    #system(command)
+    #print origindiff
+    #system(command)
 }
 
 BEGIN{
